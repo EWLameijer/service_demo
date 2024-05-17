@@ -12,38 +12,38 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @CrossOrigin("${codemo.cors}")
 public class ItemController {
-    private final ItemRepository itemRepository;
+    private final ItemService itemService;
 
     @GetMapping
     public Iterable<Item> getAll() {
-        return itemRepository.findAll();
+        return itemService.findAll();
     }
 
     @GetMapping("{id}")
     public ResponseEntity<Item> getById(@PathVariable long id) {
-        return itemRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return itemService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<Item> create(@RequestBody Item item, UriComponentsBuilder uriComponentsBuilder) {
         if (item.getName() == null || item.getPrice().compareTo(BigDecimal.ZERO) <= 0 || item.getId() != null)
             return ResponseEntity.badRequest().build();
-        itemRepository.save(item);
+        itemService.save(item);
         var location = uriComponentsBuilder.path("{id}").buildAndExpand(item.getId()).toUri();
         return ResponseEntity.created(location).body(item);
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!itemRepository.existsById(id)) return ResponseEntity.notFound().build();
-        itemRepository.deleteById(id);
+        if (!itemService.existsById(id)) return ResponseEntity.notFound().build();
+        itemService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("{id}")
     public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
         if (itemUpdates.getId() != null) return ResponseEntity.badRequest().build();
-        Optional<Item> possibleItem = itemRepository.findById(id);
+        Optional<Item> possibleItem = itemService.findById(id);
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
         Item item = possibleItem.get();
         var newName = itemUpdates.getName();
@@ -56,20 +56,20 @@ public class ItemController {
             if (newPrice.compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
             item.setPrice(newPrice);
         }
-        itemRepository.save(item);
+        itemService.save(item);
         return ResponseEntity.ok(item);
     }
 
     @PutMapping
     public ResponseEntity<?> update(@RequestBody Item updatedItem) {
         if (updatedItem.getId() == null) return ResponseEntity.badRequest().build();
-        Optional<Item> possibleItem = itemRepository.findById(updatedItem.getId());
+        Optional<Item> possibleItem = itemService.findById(updatedItem.getId());
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
         if (updatedItem.getName() == null ||
                 updatedItem.getName().isBlank() ||
                 updatedItem.getPrice() == null ||
                 updatedItem.getPrice().compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
-        itemRepository.save(updatedItem);
+        itemService.save(updatedItem);
         return ResponseEntity.noContent().build();
     }
 }
