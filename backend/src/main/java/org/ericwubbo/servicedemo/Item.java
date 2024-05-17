@@ -26,4 +26,16 @@ public class Item {
         this.name = name;
         this.price = new BigDecimal(priceAsString);
     }
+
+    public boolean hasValidName() {
+        return name != null && !name.isBlank();
+    }
+
+    public boolean hasValidPrice() {
+        return price.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public boolean isValid() {
+        return hasValidName() && hasValidPrice();
+    }
 }

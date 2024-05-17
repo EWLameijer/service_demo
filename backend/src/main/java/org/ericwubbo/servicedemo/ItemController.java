@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 @RestController
@@ -26,8 +25,7 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<Item> create(@RequestBody Item item, UriComponentsBuilder uriComponentsBuilder) {
-        if (item.getName() == null || item.getPrice().compareTo(BigDecimal.ZERO) <= 0 || item.getId() != null)
-            return ResponseEntity.badRequest().build();
+        if (item.isValid() || item.getId() != null) return ResponseEntity.badRequest().build();
         itemService.save(item);
         var location = uriComponentsBuilder.path("{id}").buildAndExpand(item.getId()).toUri();
         return ResponseEntity.created(location).body(item);
@@ -43,19 +41,12 @@ public class ItemController {
     @PatchMapping("{id}")
     public ResponseEntity<Item> update(@PathVariable Long id, @RequestBody Item itemUpdates) {
         if (itemUpdates.getId() != null) return ResponseEntity.badRequest().build();
+        if (itemService.isInvalidPatch(itemUpdates)) return ResponseEntity.badRequest().build();
+
         Optional<Item> possibleItem = itemService.findById(id);
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
         Item item = possibleItem.get();
-        var newName = itemUpdates.getName();
-        if (newName != null) { // a name has been specified
-            if (newName.isBlank()) return ResponseEntity.badRequest().build();
-            item.setName(newName);
-        }
-        var newPrice = itemUpdates.getPrice();
-        if (newPrice != null) { // a price has been specified
-            if (newPrice.compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
-            item.setPrice(newPrice);
-        }
+        itemService.patchWith(item, itemUpdates);
         itemService.save(item);
         return ResponseEntity.ok(item);
     }
@@ -63,12 +54,9 @@ public class ItemController {
     @PutMapping
     public ResponseEntity<?> update(@RequestBody Item updatedItem) {
         if (updatedItem.getId() == null) return ResponseEntity.badRequest().build();
+        if (!updatedItem.isValid()) return ResponseEntity.badRequest().build();
         Optional<Item> possibleItem = itemService.findById(updatedItem.getId());
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
-        if (updatedItem.getName() == null ||
-                updatedItem.getName().isBlank() ||
-                updatedItem.getPrice() == null ||
-                updatedItem.getPrice().compareTo(BigDecimal.ZERO) <= 0) return ResponseEntity.badRequest().build();
         itemService.save(updatedItem);
         return ResponseEntity.noContent().build();
     }
