@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getItems } from "./item_service";
 
 const App = () => {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    axios("http://localhost:8080").then((result) => setItems(result.data));
+    getItems().then((result) => setItems(result.data));
   }, []);
 
   return (
