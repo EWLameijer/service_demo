@@ -11,26 +11,6 @@ import java.util.Optional;
 public class ItemService {
     private final ItemRepository itemRepository;
 
-    public Optional<Item> findById(Long id) {
-        return itemRepository.findById(id);
-    }
-
-    public void save(Item item) {
-        itemRepository.save(item);
-    }
-
-    public void deleteById(Long id) {
-        itemRepository.deleteById(id);
-    }
-
-    public boolean existsById(Long id) {
-        return itemRepository.existsById(id);
-    }
-
-    public Iterable<Item> findAll() {
-        return itemRepository.findAll();
-    }
-
     public boolean isInvalidPatch(Item itemUpdates) {
         if (itemUpdates.getName() != null && (!itemUpdates.hasValidName() || itemUpdates.getName().length() < 2))
             return true;
@@ -44,5 +24,4 @@ public class ItemService {
         BigDecimal newPrice = updates.getPrice();
         if (newPrice != null) item.setPrice(newPrice);
     }
-
 }

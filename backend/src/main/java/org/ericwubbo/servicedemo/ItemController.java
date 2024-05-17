@@ -11,30 +11,32 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @CrossOrigin("${codemo.cors}")
 public class ItemController {
+    private final ItemRepository itemRepository;
+
     private final ItemService itemService;
 
     @GetMapping
     public Iterable<Item> getAll() {
-        return itemService.findAll();
+        return itemRepository.findAll();
     }
 
     @GetMapping("{id}")
     public ResponseEntity<Item> getById(@PathVariable long id) {
-        return itemService.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return itemRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<Item> create(@RequestBody Item item, UriComponentsBuilder uriComponentsBuilder) {
         if (item.isValid() || item.getId() != null) return ResponseEntity.badRequest().build();
-        itemService.save(item);
+        itemRepository.save(item);
         var location = uriComponentsBuilder.path("{id}").buildAndExpand(item.getId()).toUri();
         return ResponseEntity.created(location).body(item);
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!itemService.existsById(id)) return ResponseEntity.notFound().build();
-        itemService.deleteById(id);
+        if (!itemRepository.existsById(id)) return ResponseEntity.notFound().build();
+        itemRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -43,11 +45,11 @@ public class ItemController {
         if (itemUpdates.getId() != null) return ResponseEntity.badRequest().build();
         if (itemService.isInvalidPatch(itemUpdates)) return ResponseEntity.badRequest().build();
 
-        Optional<Item> possibleItem = itemService.findById(id);
+        Optional<Item> possibleItem = itemRepository.findById(id);
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
         Item item = possibleItem.get();
         itemService.patchWith(item, itemUpdates);
-        itemService.save(item);
+        itemRepository.save(item);
         return ResponseEntity.ok(item);
     }
 
@@ -55,9 +57,9 @@ public class ItemController {
     public ResponseEntity<?> update(@RequestBody Item updatedItem) {
         if (updatedItem.getId() == null) return ResponseEntity.badRequest().build();
         if (!updatedItem.isValid()) return ResponseEntity.badRequest().build();
-        Optional<Item> possibleItem = itemService.findById(updatedItem.getId());
+        Optional<Item> possibleItem = itemRepository.findById(updatedItem.getId());
         if (possibleItem.isEmpty()) return ResponseEntity.notFound().build();
-        itemService.save(updatedItem);
+        itemRepository.save(updatedItem);
         return ResponseEntity.noContent().build();
     }
 }
